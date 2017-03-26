@@ -17,7 +17,7 @@ RETURN: Periheral struct in given pointer, and status (-1=error)
 
 ==============================================================================================================*/
 
-int i2cSetup( Peripheral *p, uint8_t slaveAddr )
+int i2cSetup( peripheral *p, uint8_t slaveAddr )
 {
     if( mapPeripheral( p ) <0 ) return -1;
 
@@ -35,12 +35,12 @@ DESCRIPTION: open the memory mapping
 RETURN: file descriptor, exits on failure
 
 ==============================================================================================================*/
-int mapPeripheral( Peripheral *p )
+int mapPeripheral( peripheral *p )
 {
     // Obtain handle to physical memory
     if (( p->fd = open ("/dev/mem", O_RDWR | O_SYNC) ) < 0)
     {
-	printf("Unable to open /dev/mem: %s\n", strerror(errno));
+	printf("Unable to open /dev/mem\n");
 	return -1;
     }
 
@@ -68,7 +68,7 @@ RETURN:
 
 ==============================================================================================================*/
 
-void i2cWrite( Peripheral *p, uint8_t msg )
+void i2cWrite( peripheral *p, uint8_t msg )
 {
     *I2C_DLEN( p->addr ) = 8;// sending a byte
     *I2C_FIFO( p->addr ) = msg;// add byte to FIFO
@@ -76,7 +76,7 @@ void i2cWrite( Peripheral *p, uint8_t msg )
     *I2C_S( p->addr ) = CLEAR_STATUS;// reset status
     *I2C_C( p->addr ) = START_WRITE;
 
-    waitI2CDone();
+    waitI2CDone( p );
 
 }
 
@@ -89,11 +89,11 @@ RETURN:
 
 ==============================================================================================================*/
 
-void waitI2CDone()
+void waitI2CDone( peripheral *p )
 {
      //Wait till done, let's use a timeout just in case
     int timeout = 50;
-    while((!((BSC0_S) & BSC_S_DONE)) && --timeout)
+    while((!( (*I2C_S( p->addr ) ) & S_DONE) ) && --timeout)
     {
 	usleep(1000);
     }

@@ -71,7 +71,7 @@ Section:                                          ~libs
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <errno.h>
@@ -83,19 +83,25 @@ Section:                                          ~declarations
 
 #############################################################################################################*/
 
-
-    
-int mapPeripheral( Peripheral *p );
-
-void i2cWrite( uint8_t msg );
-
 struct Peripheral
 {
     uint32_t physical_addr;
     int fd;
     void *map;
-    volatile uint32_t *addr
+    volatile uint32_t *addr;
 };
+
+typedef struct Peripheral peripheral;
+
+
+
+int i2cSetup( peripheral *p, uint8_t slaveAddr );
+    
+int mapPeripheral( peripheral *p );
+
+void i2cWrite( peripheral *p, uint8_t msg );
+
+void waitI2CDone( peripheral *p );
 
 
 #endif// header guard
