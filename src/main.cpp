@@ -24,7 +24,6 @@ Section:                                          ~main
 
 int main()
 {
-
     auto LCD = new HdmiLCD( 0x27 );
 
     std::string test = "test";

@@ -69,6 +69,9 @@ RETURN: 0 on success, -1 on failure
 
 int HdmiI2C::setup()
 {
+    m_p = new Peripheral;
+    m_reg = new Registers;
+    
     // map it
     if( mapPeripheral() <0 ) return -1;
     
