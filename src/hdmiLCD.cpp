@@ -63,7 +63,11 @@ RETURN:
 void HdmiLCD::setupCOM()
 {
     COM->setSlaveAddr( m_LCDAddr );
-    COM->setup();
+    if( COM->HdmiI2C::setup()<0 )
+    {
+	std::cerr << "Could not setup I2C communication\n";
+	exit( EXIT_FAILURE );
+    }
 }
 
 /*=============================================================================================================
@@ -77,5 +81,5 @@ RETURN:
 
 void HdmiLCD::LCDwrite()
 {
-    COM->write( msg );
+    COM->HdmiI2C::write( msg );
 }

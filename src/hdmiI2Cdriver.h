@@ -22,8 +22,11 @@ Section:                                          ~literals
 #############################################################################################################*/
 
 // physical addressing
-#define IOBASE   0x3F000000
-#define I2C_BASE (IOBASE + 0x805000)	// the I2C base for HDMI (BSC2)
+#define IOBASE	0x3F000000
+#define BSC0	0x205000
+#define BSC1	0x804000
+#define BSC2	0x805000
+#define I2C_BASE (IOBASE + BSC0)	// the I2C base for HDMI (BSC2)
 
 // control register p.29
 #define C_I2CEN   (1 << 15)	// enable controller
@@ -61,7 +64,7 @@ Section:                                          ~macros
 #define I2C_C(addr)        (addr + 0x00)	// control
 #define I2C_S(addr)        (addr + 0x04)	// status
 #define I2C_DLEN(addr)     (addr + 0x08)	// data length
-#define I2C_A(addr)        (addr + 0x0C)	// slave address
+#define I2C_A(addr)        (addr + 0x0c)	// slave address
 #define I2C_FIFO(addr)     (addr + 0x10)	// data FIFO
 
 /*#############################################################################################################
@@ -115,6 +118,7 @@ public:
 
     HdmiI2C();
     HdmiI2C( uint8_t slaveAddr );
+    ~HdmiI2C();
 
     int setup();
     void write( uint8_t msg );
