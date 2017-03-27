@@ -17,6 +17,21 @@
 
 /*#############################################################################################################
 
+Section:                                          ~libs
+
+#############################################################################################################*/
+
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdint.h>
+
+/*#############################################################################################################
+
 Section:                                          ~literals
 
 #############################################################################################################*/
@@ -27,6 +42,13 @@ Section:                                          ~literals
 #define BSC1	0x804000
 #define BSC2	0x805000
 #define I2C_BASE (IOBASE + BSC0)	// the I2C base for HDMI (BSC2)
+
+// register offsets
+#define I2C_C        0x00	// control
+#define I2C_S        0x04	// status
+#define I2C_DLEN     0x08	// data length
+#define I2C_A        0x0c	// slave address
+#define I2C_FIFO     0x10	// data FIFO
 
 // control register p.29
 #define C_I2CEN   (1 << 15)	// enable controller
@@ -54,33 +76,7 @@ Section:                                          ~literals
 
 #define CLEAR_STATUS    S_CLKT|S_ERR|S_DONE
 
-/*#############################################################################################################
 
-Section:                                          ~macros
-
-#############################################################################################################*/
-
-// register virtual mapping macros
-#define I2C_C(addr)        (addr + 0x00)	// control
-#define I2C_S(addr)        (addr + 0x04)	// status
-#define I2C_DLEN(addr)     (addr + 0x08)	// data length
-#define I2C_A(addr)        (addr + 0x0c)	// slave address
-#define I2C_FIFO(addr)     (addr + 0x10)	// data FIFO
-
-/*#############################################################################################################
-
-Section:                                          ~libs
-
-#############################################################################################################*/
-
-#include <iostream>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdint.h>
 
 /*#############################################################################################################
 
@@ -94,15 +90,6 @@ struct Peripheral
     int fd;
     void *map;
     volatile uint32_t *addr;
-};
-
-struct Registers
-{
-    volatile uint32_t *C;
-    volatile uint32_t *S;
-    volatile uint32_t *DLEN;
-    volatile uint32_t *A;
-    volatile uint32_t *FIFO;
 };
 
 /* Usage: 
@@ -134,7 +121,6 @@ private:
     /*-------------------------------------- variables  ---------------------------------------*/
     uint8_t m_sAddr;
     Peripheral *m_p;
-    Registers *m_reg;
     
 };
 

@@ -18,9 +18,7 @@ RETURN:
 
 ==============================================================================================================*/
 HdmiI2C::HdmiI2C()
-    : m_sAddr( 0 ),
-      m_p( new Peripheral ),
-      m_reg( new Registers )
+    : HdmiI2C( 0 )
 {
     // empty
 }
@@ -37,10 +35,10 @@ RETURN:
 
 HdmiI2C::HdmiI2C( uint8_t slaveAddr )
     : m_sAddr( slaveAddr ),
-      m_p( new Peripheral ),
-      m_reg( new Registers )
+      m_p( new Peripheral )
 {
-    setup();
+    if( m_sAddr > 0 && m_sAddr <=0x7F )
+	setup();
 }
 
 /*=============================================================================================================
@@ -55,7 +53,6 @@ RETURN:
 HdmiI2C::~HdmiI2C()
 {
     delete m_p;
-    delete m_reg;
 }
 
 /*=============================================================================================================
@@ -69,23 +66,14 @@ RETURN: 0 on success, -1 on failure
 
 int HdmiI2C::setup()
 {
-    m_p = new Peripheral;
-    m_reg = new Registers;
     
     // map it
     if( mapPeripheral() <0 ) return -1;
     
-    // find register addresses 
-    m_reg->C = I2C_C( m_p->addr );
-    m_reg->S = I2C_S( m_p->addr );
-    m_reg->DLEN = I2C_DLEN( m_p->addr );
-    m_reg->A = I2C_A( m_p->addr );
-    m_reg->FIFO = I2C_FIFO( m_p->addr );
-
     // set slave address
     if( m_sAddr>0 && m_sAddr<=0x7F )
     {
-	*(m_reg->A) = m_sAddr;
+	*(m_p->addr + I2C_A) = m_sAddr;
 	return 0;
     }
 
@@ -106,11 +94,11 @@ void HdmiI2C::write( uint8_t msg )
 {
     std::cout << "writeI2C: " << std::hex << (int)msg << std::dec << std::endl;
     
-    *(m_reg->DLEN) = 1;// 1 byte
-    *(m_reg->FIFO) = msg;
+    *(m_p->addr + I2C_DLEN) = 1;// 1 byte
+    *(m_p->addr + I2C_FIFO) = msg;
 
-    *(m_reg->S) = CLEAR_STATUS;
-    *(m_reg->C) = START_WRITE;
+    *(m_p->addr + I2C_S) = CLEAR_STATUS;
+    *(m_p->addr + I2C_C) = START_WRITE;
 
     wait();
 }
@@ -185,7 +173,7 @@ void HdmiI2C::wait()
 {
      //Wait till done, let's use a timeout just in case
     int timeout = 50;
-    while( !(*(m_reg->S) & S_DONE) && --timeout )
+    while( !(*(m_p->addr + I2C_S) & S_DONE) && --timeout )
     {
 	usleep(1000);
     }
