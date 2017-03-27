@@ -50,9 +50,14 @@ RETURN: 0 on success, -1 on failure
 
 int HdmiI2C::setup()
 {
+    m_p = new Peripheral;
+    m_reg = new Registers;
+    
     // map it
+    std::cout << "mapping..";
     if( mapPeripheral() <0 ) return -1;
-
+    std::cout << "Done\n";
+    
     // find register addresses 
     m_reg->C = I2C_C( m_p->addr );
     m_reg->S = I2C_S( m_p->addr );
@@ -123,12 +128,14 @@ RETURN: -1 if error
 
 int HdmiI2C::mapPeripheral()
 {
+        
     // Obtain handle to physical memory
-    if (( m_p->fd = open ("/dev/mem", O_RDWR | O_SYNC) ) < 0)
+    if(( m_p->fd = open("/dev/mem", O_RDWR | O_SYNC) )<0 )
     {
 	std::cerr << "Unable to open /dev/mem\n";
 	return -1;
     }
+
 
     // map physical memory to virtual memory
     m_p->map = mmap( NULL, getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED, m_p->fd, m_p->physical_addr );
@@ -142,7 +149,8 @@ int HdmiI2C::mapPeripheral()
     m_p->addr = (volatile uint32_t *)m_p->map;
 
     return m_p->fd;
-
+    
+    return -1;
 }
 
 /*=============================================================================================================

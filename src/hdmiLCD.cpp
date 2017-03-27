@@ -21,6 +21,8 @@ HdmiLCD::HdmiLCD( uint8_t LCDAddr )
       m_LCDAddr( LCDAddr )
 {
     // empty
+    std::cout << "Constructor\n";
+  
 }
 
 /*=============================================================================================================
@@ -62,8 +64,14 @@ RETURN:
 
 void HdmiLCD::setupCOM()
 {
+    std::cout << "setup..";
     COM->setSlaveAddr( m_LCDAddr );
-    COM->setup();
+    if( COM->HdmiI2C::setup()<0 )
+    {
+	std::cerr << "Could not setup I2C communication\n";
+	exit( EXIT_FAILURE );
+    }
+    std::cout << "Done\n";
 }
 
 /*=============================================================================================================
@@ -77,5 +85,6 @@ RETURN:
 
 void HdmiLCD::LCDwrite()
 {
-    COM->write( msg );
+    std::cout << "write: " << std::hex << msg << std::dec << std::endl;
+    COM->HdmiI2C::write( msg );
 }
