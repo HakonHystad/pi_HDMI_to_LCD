@@ -52,6 +52,8 @@ RETURN:
 
 HdmiI2C::~HdmiI2C()
 {
+    munmap(m_p->map, _SC_PAGE_SIZE);
+    close(m_p->fd);
     delete m_p;
 }
 
