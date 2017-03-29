@@ -82,7 +82,7 @@ int HdmiI2C::setup()
     //setAltFunc();
     
     // set slave address
-    if( m_sAddr>0 )
+    if( m_sAddr>0 && m_sAddr<=0x7F )
     {
 	*(m_p->addr + I2C_A) =((int)m_sAddr) & 0xff;
 	return 0;
@@ -106,6 +106,7 @@ void HdmiI2C::write( uint8_t msg )
     std::cout << "writeI2C: " << std::hex << (int)msg << std::dec << std::endl;
     
     *(m_p->addr + I2C_DLEN) = 1;// 1 byte
+
     *(m_p->addr + I2C_FIFO) = ((int)msg) & 0xff;
 
     *(m_p->addr + I2C_S) = CLEAR_STATUS;
@@ -156,6 +157,7 @@ int HdmiI2C::mapPeripheral( Peripheral *p )
         
     // Obtain handle to physical memory
     if(( p->fd = open("/dev/mem", O_RDWR | O_SYNC) )<0 )
+
     {
 	std::cerr << "Unable to open /dev/mem\n";
 	return -1;
@@ -163,7 +165,9 @@ int HdmiI2C::mapPeripheral( Peripheral *p )
 
 
     // map physical memory to virtual memory
+
     p->map = mmap( NULL, _SC_PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, p->fd, p->physical_addr );
+
 
     if( p->map == MAP_FAILED )
     {
@@ -192,7 +196,8 @@ void HdmiI2C::setAltFunc()
     *(m_gpio->addr) |= 1<<11;// SCL
     *(m_gpio->addr) |= 1<<8;// SDA
 
-    std::cout << "Set alt function: " << *(m_gpio->addr) << std::endl;
+//    std::cout << "Set alt function: " << *(m_gpio->addr) << std::endl;
+
 }
 
 

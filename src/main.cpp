@@ -28,6 +28,7 @@ int main()
 
     std::string test = "test";
     LCD->init();
+    
     int i = 2;
     while( --i ) 
 	LCD->print( test );

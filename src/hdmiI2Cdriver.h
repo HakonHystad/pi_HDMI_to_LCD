@@ -41,6 +41,7 @@ Section:                                          ~literals
 #define BSC0	0x205000
 #define BSC1	0x804000
 #define BSC2	0x805000
+
 #define I2C_BASE (IOBASE + BSC2)	// the I2C base for HDMI (BSC2)
 #define GPIO_BASE (IOBASE + 0x200000)
 
@@ -50,6 +51,8 @@ Section:                                          ~literals
 #define I2C_DLEN     0x02	// data length
 #define I2C_A        0x03	// slave address
 #define I2C_FIFO     0x04	// data FIFO
+
+#define I2C_BASE (IOBASE + BSC1)	// the I2C base for HDMI (BSC2)
 
 // control register p.29
 #define C_I2CEN   (1 << 15)	// enable controller
@@ -123,6 +126,7 @@ private:
     /*-------------------------------------- variables  ---------------------------------------*/
     uint8_t m_sAddr;
     Peripheral *m_p;
+
     Peripheral *m_gpio;
     
 };
