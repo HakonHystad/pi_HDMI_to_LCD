@@ -99,14 +99,14 @@ class I2C_LCD
 public:
     I2C_LCD();
 
-    void init();// called by constructor
+    void init();
 
     //void setCursor( uint8_t row, uint8_t col );
     void print( std::string data );
 
 protected:
-    virtual void setupCOM() = 0;// abstract
-    virtual void LCDwrite() = 0;// abstract
+    virtual void setupCOM()=0;// abstract
+    virtual void LCDwrite()=0;// abstract
     int msg;
 
 private:

@@ -26,7 +26,7 @@ RETURN:
 
 I2C_LCD::I2C_LCD()
 {
-    init();
+    // empty
 }
 
 
@@ -41,7 +41,9 @@ RETURN:
 
 void I2C_LCD::init()
 {
+    std::cout << "init..\n";
     setupCOM();
+    std::cout << "init: setup complete\n";
 
     
     // signal start
