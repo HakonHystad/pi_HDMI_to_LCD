@@ -18,7 +18,7 @@ RETURN:
 
 ==============================================================================================================*/
 HdmiI2C::HdmiI2C()
-    : m_sAddr( 0 )
+    : HdmiI2C( 0 )
 {
     // empty
 }
@@ -34,9 +34,31 @@ RETURN:
 ==============================================================================================================*/
 
 HdmiI2C::HdmiI2C( uint8_t slaveAddr )
-    : m_sAddr( slaveAddr )
+    : m_sAddr( slaveAddr ),
+      m_p( new Peripheral ),
+      m_gpio( new Peripheral )
 {
-    setup();
+    m_p->physical_addr = I2C_BASE;
+    m_gpio->physical_addr = GPIO_BASE;
+    
+    if( m_sAddr > 0 && m_sAddr <=0x7F )
+	setup();
+}
+
+/*=============================================================================================================
+
+NAME:                                             ~HdmiI2C(destructor)
+ARGUMENT(S):
+DESCRIPTION:
+RETURN:
+
+==============================================================================================================*/
+
+HdmiI2C::~HdmiI2C()
+{
+    munmap(m_p->map, _SC_PAGE_SIZE);
+    close(m_p->fd);
+    delete m_p;
 }
 
 /*=============================================================================================================
@@ -50,20 +72,19 @@ RETURN: 0 on success, -1 on failure
 
 int HdmiI2C::setup()
 {
-    // map it
-    if( mapPeripheral() <0 ) return -1;
+    
+    // map BSC
+    if( mapPeripheral( m_p ) <0 ) return -1;
 
-    // find register addresses 
-    m_reg->C = I2C_C( m_p->addr );
-    m_reg->S = I2C_S( m_p->addr );
-    m_reg->DLEN = I2C_DLEN( m_p->addr );
-    m_reg->A = I2C_A( m_p->addr );
-    m_reg->FIFO = I2C_FIFO( m_p->addr );
+    // map GPIO
+    if( mapPeripheral( m_gpio ) <0 ) return -1;
 
+    //setAltFunc();
+    
     // set slave address
     if( m_sAddr>0 )
     {
-	*m_reg->A = m_sAddr;
+	*(m_p->addr + I2C_A) =((int)m_sAddr) & 0xff;
 	return 0;
     }
 
@@ -82,11 +103,20 @@ RETURN:
 
 void HdmiI2C::write( uint8_t msg )
 {
-    *m_reg->DLEN = 8;
-    *m_reg->FIFO = msg;
+    std::cout << "writeI2C: " << std::hex << (int)msg << std::dec << std::endl;
+    
+    *(m_p->addr + I2C_DLEN) = 1;// 1 byte
+    *(m_p->addr + I2C_FIFO) = ((int)msg) & 0xff;
 
-    *m_reg->S = CLEAR_STATUS;
-    *m_reg->C = START_WRITE;
+    *(m_p->addr + I2C_S) = CLEAR_STATUS;
+    
+
+    std::cout << "C: " << std::hex << *(m_p->addr + I2C_C)
+	      << "\nS: " << *(m_p->addr + I2C_S)
+	      << "\nDLEN: " << *(m_p->addr + I2C_DLEN)
+	      << "\nA: " << *(m_p->addr + I2C_A)
+	      << "\nFIFO: " << *(m_p->addr + I2C_FIFO) << std::dec << std::endl;
+    *(m_p->addr + I2C_C) = START_WRITE;
 
     wait();
 }
@@ -121,29 +151,50 @@ RETURN: -1 if error
 
 ==============================================================================================================*/
 
-int HdmiI2C::mapPeripheral()
+int HdmiI2C::mapPeripheral( Peripheral *p )
 {
+        
     // Obtain handle to physical memory
-    if (( m_p->fd = open ("/dev/mem", O_RDWR | O_SYNC) ) < 0)
+    if(( p->fd = open("/dev/mem", O_RDWR | O_SYNC) )<0 )
     {
 	std::cerr << "Unable to open /dev/mem\n";
 	return -1;
     }
 
-    // map physical memory to virtual memory
-    m_p->map = mmap( NULL, getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED, m_p->fd, m_p->physical_addr );
 
-    if( m_p->map == MAP_FAILED )
+    // map physical memory to virtual memory
+    p->map = mmap( NULL, _SC_PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, p->fd, p->physical_addr );
+
+    if( p->map == MAP_FAILED )
     {
 	perror( "mmap" );
 	return -1;
     }
 
-    m_p->addr = (volatile uint32_t *)m_p->map;
+    p->addr = (volatile uint32_t *)p->map;
 
-    return m_p->fd;
-
+    return p->fd;
+    
 }
+
+/*=============================================================================================================
+
+NAME:                                             ~setAltFunc
+ARGUMENT(S):
+DESCRIPTION: sets the gpio pin to use the alternative function I2C
+RETURN:
+
+==============================================================================================================*/
+
+void HdmiI2C::setAltFunc()
+{
+    *(m_gpio->addr) &= ~0xfc0;// null bits 6-11 of FSEL0
+    *(m_gpio->addr) |= 1<<11;// SCL
+    *(m_gpio->addr) |= 1<<8;// SDA
+
+    std::cout << "Set alt function: " << *(m_gpio->addr) << std::endl;
+}
+
 
 /*=============================================================================================================
 
@@ -158,10 +209,11 @@ void HdmiI2C::wait()
 {
      //Wait till done, let's use a timeout just in case
     int timeout = 50;
-    while( !(*m_reg->S & S_DONE) && --timeout )
+    while( !(*(m_p->addr + I2C_S) & S_DONE) && --timeout )
     {
 	usleep(1000);
     }
-	if(timeout == 0) std::cerr << "i2c timeout. Something went wrong.\n";
+
+    if(timeout == 0) std::cerr << "i2c timeout. Something went wrong.\n";
 	
 }

@@ -17,13 +17,39 @@
 
 /*#############################################################################################################
 
+Section:                                          ~libs
+
+#############################################################################################################*/
+
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdint.h>
+
+/*#############################################################################################################
+
 Section:                                          ~literals
 
 #############################################################################################################*/
 
 // physical addressing
-#define IOBASE   0x3F000000
-#define I2C_BASE (IOBASE + 0x805000)	// the I2C base for HDMI (BSC2)
+#define IOBASE	0x3F000000
+#define BSC0	0x205000
+#define BSC1	0x804000
+#define BSC2	0x805000
+#define I2C_BASE (IOBASE + BSC2)	// the I2C base for HDMI (BSC2)
+#define GPIO_BASE (IOBASE + 0x200000)
+
+// register offsets
+#define I2C_C        0x00	// control
+#define I2C_S        0x01	// status
+#define I2C_DLEN     0x02	// data length
+#define I2C_A        0x03	// slave address
+#define I2C_FIFO     0x04	// data FIFO
 
 // control register p.29
 #define C_I2CEN   (1 << 15)	// enable controller
@@ -51,33 +77,7 @@ Section:                                          ~literals
 
 #define CLEAR_STATUS    S_CLKT|S_ERR|S_DONE
 
-/*#############################################################################################################
 
-Section:                                          ~macros
-
-#############################################################################################################*/
-
-// register virtual mapping macros
-#define I2C_C(addr)        (addr + 0x00)	// control
-#define I2C_S(addr)        (addr + 0x04)	// status
-#define I2C_DLEN(addr)     (addr + 0x08)	// data length
-#define I2C_A(addr)        (addr + 0x0C)	// slave address
-#define I2C_FIFO(addr)     (addr + 0x10)	// data FIFO
-
-/*#############################################################################################################
-
-Section:                                          ~libs
-
-#############################################################################################################*/
-
-#include <iostream>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdint.h>
 
 /*#############################################################################################################
 
@@ -93,15 +93,6 @@ struct Peripheral
     volatile uint32_t *addr;
 };
 
-struct Registers
-{
-    volatile uint32_t *C;
-    volatile uint32_t *S;
-    volatile uint32_t *DLEN;
-    volatile uint32_t *A;
-    volatile uint32_t *FIFO;
-};
-
 /* Usage: 
  * 1. set slave address
  * 2. run setup
@@ -115,6 +106,7 @@ public:
 
     HdmiI2C();
     HdmiI2C( uint8_t slaveAddr );
+    ~HdmiI2C();
 
     int setup();
     void write( uint8_t msg );
@@ -124,13 +116,14 @@ public:
 private:
 
     /*-------------------------------------- functions  ---------------------------------------*/
-    int mapPeripheral();
+    int mapPeripheral( Peripheral *p );
+    void setAltFunc();
     void wait();
 
     /*-------------------------------------- variables  ---------------------------------------*/
     uint8_t m_sAddr;
     Peripheral *m_p;
-    Registers *m_reg;
+    Peripheral *m_gpio;
     
 };
 
