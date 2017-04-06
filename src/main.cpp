@@ -13,8 +13,7 @@ Section:                                          ~libs
 #############################################################################################################*/
 
 #include "hdmiLCD.h"
-#include <string>
-#include <iostream>
+
 
 /*#############################################################################################################
 
@@ -24,14 +23,12 @@ Section:                                          ~main
 
 int main()
 {
-    auto LCD = new HdmiLCD( 0x27 );
+    HdmiLCD lcd( 0x27 );
 
-    std::string test = "test";
-    LCD->init();
-    
-    int i = 2;
-    while( --i ) 
-	LCD->print( test );
+    lcd.init();
+    lcd.clear();
+     
+    lcd.print( "test" );
     
     return 0;
 }
