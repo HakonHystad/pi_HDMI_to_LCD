@@ -101,8 +101,12 @@ public:
 
     void init();
 
-    //void setCursor( uint8_t row, uint8_t col );
+    void setCursor( uint8_t row, uint8_t col );
+    void clear();
+    void home();
+    
     void print( std::string data );
+    void print( std::string data, uint8_t row, uint8_t col );
 
 protected:
     virtual void setupCOM()=0;// abstract
@@ -115,9 +119,7 @@ private:
     void command( int data );
     void wData( int data );
     void send( int data );
-    void clear();
-    void home();
-
+    
 };
 
 

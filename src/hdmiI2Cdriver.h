@@ -39,20 +39,18 @@ Section:                                          ~literals
 // physical addressing
 #define IOBASE	0x3F000000
 #define BSC0	0x205000
-#define BSC1	0x804000
-#define BSC2	0x805000
+#define BSC1	0x804000	// I2C of GPIO 2 and 3
+#define BSC2	0x805000	// I2C of the pi's hdmi
 
 #define I2C_BASE (IOBASE + BSC2)	// the I2C base for HDMI (BSC2)
 #define GPIO_BASE (IOBASE + 0x200000)
 
-// register offsets
+// register offsets (pointer relative)
 #define I2C_C        0x00	// control
 #define I2C_S        0x01	// status
 #define I2C_DLEN     0x02	// data length
 #define I2C_A        0x03	// slave address
 #define I2C_FIFO     0x04	// data FIFO
-
-#define I2C_BASE (IOBASE + BSC1)	// the I2C base for HDMI (BSC2)
 
 // control register p.29
 #define C_I2CEN   (1 << 15)	// enable controller
